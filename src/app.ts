@@ -14,6 +14,11 @@ import mainInventoryRoutes from "./routes/mainInventoryRoutes";
 import kitchenInventoryRoutes from "./routes/kitchenInventoryRoutes";
 import tableRoutes from "./routes/tableRoutes";
 import GlobalErrorHandler from "./controllers/errorController";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import hpp from "hpp";
+import { JSDOM } from "jsdom";
+import createDOMPurify from "dompurify";
 
 // Initialize app
 const app = express();
@@ -23,18 +28,51 @@ const app = express();
  */
 
 // body parser
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Static files
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // Cors
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://127.0.0.1:3000",
+  })
+);
 
+// Use morgoan when in development
 if (env.isDevelopment) {
   app.use(morgan("dev"));
 }
+
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(hpp());
+
+const { window } = new JSDOM();
+const DOMPurify = createDOMPurify(window);
+app.use((req, res, next) => {
+  // Sanitize request body
+  if (req.body && typeof req.body === "object") {
+    Object.keys(req.body).forEach((key) => {
+      if (typeof req.body[key] === "string") {
+        req.body[key] = DOMPurify.sanitize(req.body[key] as string);
+      }
+    });
+  }
+
+  // Sanitize request query parameters
+  if (req.query && typeof req.query === "object") {
+    Object.keys(req.query).forEach((key) => {
+      if (typeof req.query[key] === "string") {
+        req.query[key] = DOMPurify.sanitize(req.query[key] as string);
+      }
+    });
+  }
+
+  next();
+});
 
 /**
  * Routes
