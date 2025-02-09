@@ -1,7 +1,7 @@
-import { RequestHandler } from "express";
-import catchAsync from "../util/catchAsync";
-import orderService from "../services/orderService";
-import { OrderDto, UpdateOrderDto } from "../dtos/order.dto";
+import { RequestHandler } from 'express';
+import catchAsync from '../util/catchAsync';
+import orderService from '../services/orderService';
+import { OrderDto, UpdateOrderDto } from '../dtos/order.dto';
 
 /**
  * Function to create order
@@ -11,8 +11,8 @@ export const createOrder: RequestHandler<{}, {}, OrderDto> = catchAsync(
     const order = await orderService.createOrder(req.body);
 
     res.status(200).json({
-      status: "success",
-      message: "Order successfully created!",
+      status: 'success',
+      message: 'Order successfully created!',
       data: {
         order,
       },
@@ -28,8 +28,8 @@ export const updateOrder: RequestHandler<{ id: string }, {}, UpdateOrderDto> =
     const order = await orderService.updateOrder(req.params.id, req.body);
 
     res.status(200).json({
-      status: "success",
-      message: "Order successfully updated!",
+      status: 'success',
+      message: 'Order successfully updated!',
       data: {
         order,
       },
@@ -50,11 +50,11 @@ export const getOrders: RequestHandler<
   const lastDays = Number(days_range || 7);
   const orders = await orderService.getOrders(
     lastDays,
-    active_only === "true" ? true : false
+    active_only === 'true' ? true : false
   );
 
   res.status(200).json({
-    status: "success",
+    status: 'success',
     length: orders.length,
     data: {
       orders,
@@ -71,7 +71,7 @@ export const getOrderById: RequestHandler<{ id: string }> = catchAsync(
     const order = await orderService.getOrderById(req.params.id);
 
     res.status(200).json({
-      status: "success",
+      status: 'success',
       data: {
         order,
       },
@@ -93,7 +93,7 @@ export const getInvoice: RequestHandler<
   const order = await orderService.getInvoice(id);
 
   res.status(200).json({
-    status: "success",
+    status: 'success',
     data: {
       order,
     },
@@ -110,10 +110,9 @@ export const getOrderReports: RequestHandler<
   { days_range: string }
 > = catchAsync(async (req, res, next) => {
   const { days_range } = req.query;
-  console.log(days_range);
   const result = await orderService.getOrdersReport(Number(days_range));
   res.status(200).json({
-    status: "success",
+    status: 'success',
     data: {
       report: result,
     },

@@ -1,12 +1,12 @@
-import { Types } from "mongoose";
-import env from "../config/env";
-import { UserRegisterDto } from "../dtos/user.dto";
-import { IUser, IUserInfo } from "../interfaces/user.interface";
-import User from "../models/userModel";
-import jwt from "jsonwebtoken";
-import { UserLoginDto } from "../dtos/user.dto";
+import { Types } from 'mongoose';
+import env from '../config/env';
+import { UserRegisterDto } from '../dtos/user.dto';
+import { IUser, IUserInfo } from '../interfaces/user.interface';
+import User from '../models/userModel';
+import jwt from 'jsonwebtoken';
+import { UserLoginDto } from '../dtos/user.dto';
 
-import createHttpError from "http-errors";
+import createHttpError from 'http-errors';
 
 class UserService {
   /**
@@ -33,7 +33,7 @@ class UserService {
    */
   public async register(
     userData: UserRegisterDto
-  ): Promise<Omit<IUser, "password">> {
+  ): Promise<Omit<IUser, 'password'>> {
     const newUser = await User.create(userData);
     const { password, ...userWithoutPassword } = newUser.toObject();
     return userWithoutPassword;
@@ -50,24 +50,24 @@ class UserService {
    */
   public async login(
     userData: UserLoginDto
-  ): Promise<Omit<IUserInfo, "password">> {
+  ): Promise<Omit<IUserInfo, 'password'>> {
     const { email, password } = userData;
 
     // If no email and password
     if (!email && !password) {
       throw createHttpError(
         401,
-        "Please provide your Email and Password to login!"
+        'Please provide your Email and Password to login!'
       );
     }
 
     // If no email or password
     if (!email || !password) {
       if (!email) {
-        throw createHttpError(401, "Please provide your Email to login!");
+        throw createHttpError(401, 'Please provide your Email to login!');
       }
       if (!password) {
-        throw createHttpError(401, "Please provide your password to login!");
+        throw createHttpError(401, 'Please provide your password to login!');
       }
     }
 
@@ -76,14 +76,14 @@ class UserService {
 
     // Check if user exists and password is correct
     if (!user || !(await user.correctPassword(password, user.password))) {
-      throw createHttpError(401, "Invalid email or password!");
+      throw createHttpError(401, 'Invalid email or password!');
     }
 
     // Create token and save in db
     const token = this.createToken(user._id);
     user.token = token;
     await user.save({ validateBeforeSave: false });
-    // remove password from db
+    // remove password from user
     const { password: pass, ...userWithoutPassword } = user.toObject();
     // return user without db
     return userWithoutPassword;
@@ -91,7 +91,7 @@ class UserService {
 
   public async getAllUsers(): Promise<IUser[]> {
     // remove password and token
-    const users = await User.find().select(["-password", "-token"]);
+    const users = await User.find().select(['-password', '-token']);
     return users;
   }
 
