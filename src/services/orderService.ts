@@ -1,13 +1,13 @@
-import mongoose from "mongoose"; // Import mongoose for transactions
-import { OrderDto } from "../dtos/order.dto";
-import { IOrder } from "../interfaces/order.interface";
-import Order from "../models/orderModel";
-import createHttpError from "http-errors";
-import Product from "../models/productModel";
-import KitchenInventory from "../models/kitchenModel";
-import Deal from "../models/dealModel";
-import { IProduct } from "../interfaces/product.interface";
-import Table from "../models/tableModel";
+import mongoose from 'mongoose'; // Import mongoose for transactions
+import { OrderDto } from '../dtos/order.dto';
+import { IOrder } from '../interfaces/order.interface';
+import Order from '../models/orderModel';
+import createHttpError from 'http-errors';
+import Product from '../models/productModel';
+import KitchenInventory from '../models/kitchenModel';
+import Deal from '../models/dealModel';
+import { IProduct } from '../interfaces/product.interface';
+import Table from '../models/tableModel';
 
 class OrderService {
   private async restoreInventory(
@@ -51,11 +51,11 @@ class OrderService {
       for (const deal of deals) {
         const foundDeal = await Deal.findById(deal.deal);
         if (!foundDeal)
-          throw createHttpError(404, "One of the deals was not found!");
+          throw createHttpError(404, 'One of the deals was not found!');
 
         for (const dealProduct of foundDeal.products) {
           const existingProductIndex = combinedProducts.findIndex(
-            (p) => p.product.toString() === dealProduct.product._id.toString()
+            p => p.product.toString() === dealProduct.product._id.toString()
           );
 
           if (existingProductIndex > -1) {
@@ -82,7 +82,7 @@ class OrderService {
     for (const prod of combinedProducts) {
       const isProd = await Product.findById(prod.product).session(session);
       if (!isProd)
-        throw createHttpError(404, "One of the products was not found!");
+        throw createHttpError(404, 'One of the products was not found!');
 
       total += isProd.price * prod.quantity;
       const { ingredients } = isProd;
@@ -141,13 +141,13 @@ class OrderService {
     session: mongoose.ClientSession
   ) {
     if (!tableNum)
-      throw createHttpError(400, "Table number is required in dine_in orders!");
+      throw createHttpError(400, 'Table number is required in dine_in orders!');
 
     const isTable = await Table.findOne({ number: tableNum }).session(session);
     if (!isTable)
       throw createHttpError(
         404,
-        "No table were found with table number: " + tableNum
+        'No table were found with table number: ' + tableNum
       );
 
     if (isTable.isReserved)
@@ -163,7 +163,7 @@ class OrderService {
 
     try {
       const { products, deals, type, table } = ordData;
-      if (type === "dine_in") {
+      if (type === 'dine_in') {
         await this.checkTableInfo(Number(table), type, session);
       }
 
@@ -201,7 +201,7 @@ class OrderService {
 
     try {
       const existingOrder = await Order.findOne({ orderId }).session(session);
-      if (!existingOrder) throw createHttpError(404, "Order not found!");
+      if (!existingOrder) throw createHttpError(404, 'Order not found!');
 
       // Step 4: Update the order
       const updatedOrder = await Order.findOneAndUpdate(
@@ -230,7 +230,7 @@ class OrderService {
       await session.commitTransaction();
       session.endSession();
 
-      if (!updatedOrder) throw createHttpError("No order found!");
+      if (!updatedOrder) throw createHttpError('No order found!');
       return updatedOrder;
     } catch (error) {
       await session.abortTransaction();
@@ -245,7 +245,7 @@ class OrderService {
 
     try {
       const existingOrder = await Order.findOne({ orderId }).session(session);
-      if (!existingOrder) throw createHttpError(404, "Order not found!");
+      if (!existingOrder) throw createHttpError(404, 'Order not found!');
 
       // Step 1: Restore inventory for the existing order
       await this.restoreInventory(existingOrder, session);
@@ -266,14 +266,14 @@ class OrderService {
     const updatedOrder = await Order.findOneAndUpdate(
       { orderId: id },
       {
-        status: "completed",
+        status: 'completed',
       },
       { new: true }
     );
 
     if (!updatedOrder)
       throw createHttpError(404, `Order not found with ID: ${id}`);
-    if (updatedOrder.type === "dine_in") {
+    if (updatedOrder.type === 'dine_in') {
       await Table.findOneAndUpdate(
         { number: updatedOrder.table },
         { isReserved: false }
@@ -299,7 +299,7 @@ class OrderService {
           $gte: startDate,
           $lte: endDate,
         },
-        status: "processing",
+        status: 'processing',
       }).sort({ createdAt: -1 });
     } else {
       orders = await Order.find({
@@ -323,12 +323,6 @@ class OrderService {
     const pastDate = new Date();
     pastDate.setDate(now.getDate() - days);
 
-    interface CombineResult {
-      _id: Date;
-      totalDailyPrice: number;
-      totalDailyProfit: number;
-    }
-
     const productResult = await Order.aggregate([
       {
         $match: {
@@ -340,21 +334,21 @@ class OrderService {
       },
       {
         $unwind: {
-          path: "$products",
+          path: '$products',
           preserveNullAndEmptyArrays: true,
         },
       },
       {
         $lookup: {
-          from: "products",
-          localField: "products.product",
-          foreignField: "_id",
-          as: "productDetail",
+          from: 'products',
+          localField: 'products.product',
+          foreignField: '_id',
+          as: 'productDetail',
         },
       },
       {
         $unwind: {
-          path: "$productDetail",
+          path: '$productDetail',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -362,13 +356,13 @@ class OrderService {
         $addFields: {
           productProfit: {
             $cond: {
-              if: { $gt: ["$products", null] },
+              if: { $gt: ['$products', null] },
               then: {
                 $multiply: [
                   {
-                    $subtract: ["$productDetail.price", "$productDetail.cost"],
+                    $subtract: ['$productDetail.price', '$productDetail.cost'],
                   },
-                  "$products.quantity",
+                  '$products.quantity',
                 ],
               },
               else: 0,
@@ -376,9 +370,9 @@ class OrderService {
           },
           productPrice: {
             $cond: {
-              if: { $gt: ["$products", null] },
+              if: { $gt: ['$products', null] },
               then: {
-                $multiply: ["$productDetail.price", "$products.quantity"],
+                $multiply: ['$productDetail.price', '$products.quantity'],
               },
               else: 0,
             },
@@ -388,11 +382,11 @@ class OrderService {
       {
         $group: {
           _id: {
-            orderId: "$_id",
-            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            orderId: '$_id',
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           },
-          totalPrice: { $sum: "$productPrice" },
-          totalProfit: { $sum: "$productProfit" },
+          totalPrice: { $sum: '$productPrice' },
+          totalProfit: { $sum: '$productProfit' },
         },
       },
       {
@@ -403,9 +397,9 @@ class OrderService {
       },
       {
         $group: {
-          _id: "$_id.date",
-          totalDailyPrice: { $sum: "$totalPrice" },
-          totalDailyProfit: { $sum: "$totalProfit" },
+          _id: '$_id.date',
+          totalDailyPrice: { $sum: '$totalPrice' },
+          totalDailyProfit: { $sum: '$totalProfit' },
         },
       },
       {
@@ -426,45 +420,45 @@ class OrderService {
       {
         $addFields: {
           date: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
           },
         },
       },
       // Step 1: Unwind the deals array
-      { $unwind: "$deals" },
+      { $unwind: '$deals' },
 
       // Step 2: Lookup deal details (including products and price)
       {
         $lookup: {
-          from: "deals",
-          localField: "deals.deal",
-          foreignField: "_id",
-          as: "dealDetails",
+          from: 'deals',
+          localField: 'deals.deal',
+          foreignField: '_id',
+          as: 'dealDetails',
         },
       },
-      { $unwind: "$dealDetails" }, // Unwind the deal details
+      { $unwind: '$dealDetails' }, // Unwind the deal details
 
       // Step 3: Unwind products array inside the deal
-      { $unwind: "$dealDetails.products" },
+      { $unwind: '$dealDetails.products' },
 
       // Step 4: Lookup product details (including cost)
       {
         $lookup: {
-          from: "products",
-          localField: "dealDetails.products.product",
-          foreignField: "_id",
-          as: "productDetails",
+          from: 'products',
+          localField: 'dealDetails.products.product',
+          foreignField: '_id',
+          as: 'productDetails',
         },
       },
-      { $unwind: "$productDetails" }, // Unwind the product details
+      { $unwind: '$productDetails' }, // Unwind the product details
 
       // Step 5: Calculate the profit for each product
       {
         $addFields: {
           productProfit: {
             $multiply: [
-              "$dealDetails.products.quantity",
-              "$productDetails.cost",
+              '$dealDetails.products.quantity',
+              '$productDetails.cost',
             ],
           },
         },
@@ -474,13 +468,13 @@ class OrderService {
       {
         $group: {
           _id: {
-            orderId: "$_id",
-            dealId: "$deals.deal",
-            date: "$date",
+            orderId: '$_id',
+            dealId: '$deals.deal',
+            date: '$date',
           },
-          totalProductCost: { $sum: "$productProfit" },
-          dealPrice: { $first: "$dealDetails.price" },
-          dealQuantity: { $first: "$deals.quantity" },
+          totalProductCost: { $sum: '$productProfit' },
+          dealPrice: { $first: '$dealDetails.price' },
+          dealQuantity: { $first: '$deals.quantity' },
         },
       },
 
@@ -488,12 +482,12 @@ class OrderService {
       {
         $addFields: {
           totalDealPrice: {
-            $multiply: ["$dealPrice", "$dealQuantity"],
+            $multiply: ['$dealPrice', '$dealQuantity'],
           },
           totalDealProfit: {
             $subtract: [
-              { $multiply: ["$dealPrice", "$dealQuantity"] },
-              { $multiply: ["$totalProductCost", "$dealQuantity"] },
+              { $multiply: ['$dealPrice', '$dealQuantity'] },
+              { $multiply: ['$totalProductCost', '$dealQuantity'] },
             ],
           },
         },
@@ -502,9 +496,9 @@ class OrderService {
       // Step 8: Group by date to sum up the total price and profit
       {
         $group: {
-          _id: "$_id.date",
-          totalDailyPrice: { $sum: "$totalDealPrice" },
-          totalDailyProfit: { $sum: "$totalDealProfit" },
+          _id: '$_id.date',
+          totalDailyPrice: { $sum: '$totalDealPrice' },
+          totalDailyProfit: { $sum: '$totalDealProfit' },
         },
       },
 
@@ -545,7 +539,7 @@ class OrderService {
 
       // Helper function to add results to combined object
       function addResults(results: DailyResult[]) {
-        results.forEach((item) => {
+        results.forEach(item => {
           const date = item._id;
           if (!combined[date]) {
             combined[date] = {

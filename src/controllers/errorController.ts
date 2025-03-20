@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from "express";
-import { isHttpError } from "http-errors";
-import env from "../config/env";
+import { NextFunction, Request, Response } from 'express';
+import { isHttpError } from 'http-errors';
+import env from '../config/env';
 
 type ErrFunc = (err: any, res: Response) => void;
 
@@ -13,7 +13,7 @@ const handleDuplicateError: ErrFunc = (err, res) => {
     Object.values(duplicateValue)[0]
   } already exists, please use another one!`;
   return res.status(400).json({
-    status: "fail",
+    status: 'fail',
     message,
   });
 };
@@ -25,10 +25,10 @@ const handleValidationError: ErrFunc = (err, res) => {
   const { errors } = err;
   const message = Object.keys(errors)
     .map((key: any) => errors[key])
-    .map((obj) => obj.message)
-    .join(", ");
+    .map(obj => obj.message)
+    .join(', ');
   return res.status(400).json({
-    status: "fail",
+    status: 'fail',
     message,
   });
 };
@@ -38,7 +38,7 @@ const handleValidationError: ErrFunc = (err, res) => {
  */
 const handleDevError: ErrFunc = (err, res) => {
   const errObj = {
-    status: "error",
+    status: 'error',
     message: (err as Error).message,
     err: err as Error,
     stack: (err as Error).stack,
@@ -53,7 +53,7 @@ const handleProError: ErrFunc = (err, res) => {
   // If operational error
   if (isHttpError(err)) {
     const errObj = {
-      status: "error",
+      status: 'error',
       message: (err as Error).message,
     };
     return res.status(isHttpError(err) ? err.statusCode : 500).json(errObj);
@@ -62,12 +62,12 @@ const handleProError: ErrFunc = (err, res) => {
   else if ((err as any)?.errorResponse?.code === 11000)
     handleDuplicateError(err, res);
   // Handle validation error
-  else if ((err as any)?.name === "ValidationError")
+  else if ((err as any)?.name === 'ValidationError')
     handleValidationError(err, res);
   else
     res.status(500).json({
-      status: "error",
-      message: "Something went very wrong!",
+      status: 'error',
+      message: 'Something went very wrong!',
     });
 };
 
@@ -79,7 +79,7 @@ const errorController = (
 ) => {
   // If in dev
   if (env.isDev) {
-    console.log("Err:dev");
+    console.log('Err:dev');
     handleDevError(err, res);
   }
 

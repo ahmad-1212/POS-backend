@@ -6,6 +6,7 @@ import { Server } from 'http';
 //PORT
 const PORT = env.PORT || 3000;
 
+// Catch uncaught exceptions
 process.on('uncaughtException', (err: Error) => {
   console.log(err.name, err.message);
   process.exit(1);

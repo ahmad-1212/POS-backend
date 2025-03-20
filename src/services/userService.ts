@@ -99,8 +99,43 @@ class UserService {
     await User.findByIdAndUpdate(id, { token: null });
   }
 
-  public async deleteUser(id: Types.ObjectId): Promise<void> {
+  public async deleteUser(
+    id: Types.ObjectId,
+    currentUserId: Types.ObjectId
+  ): Promise<void> {
+    type Role = 'staff' | 'cashier' | 'manager' | 'admin';
+
+    const user = await User.findById(id);
+    if (!user) {
+      throw createHttpError(404, 'User not found!');
+    }
+
+    if ((user.role as Role) === 'admin') {
+      throw createHttpError(403, 'You cannot delete an admin!');
+    }
+
+    if (user._id.toString() === currentUserId.toString()) {
+      throw createHttpError(403, 'You are not allowed to delete yourself!');
+    }
     await User.findByIdAndDelete(id);
+  }
+
+  public async updateUser(
+    id: Types.ObjectId,
+    data: Partial<IUser>
+  ): Promise<IUser> {
+    const user = await User.findById(id);
+    if (!user) {
+      throw createHttpError(404, 'User not found!');
+    }
+
+    user.username = data.username || user.username;
+    user.email = data.email || user.email;
+    user.role = data.role || user.role;
+
+    await user.save({ validateBeforeSave: false });
+
+    return user;
   }
 }
 
