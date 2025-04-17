@@ -37,6 +37,7 @@ const handleValidationError: ErrFunc = (err, res) => {
  * Function to send error when development mode
  */
 const handleDevError: ErrFunc = (err, res) => {
+  console.log(err);
   const errObj = {
     status: 'error',
     message: (err as Error).message,

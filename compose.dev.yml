@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/server
+      - /server/node_modules
+    env_file:
+      - .env
+
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    env_file:
+      - db.env
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    env_file:
+      - db.env
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:
+    driver: local
